@@ -1,7 +1,102 @@
+// import fs from "fs";
+// import * as pdfjs from "pdf-parse";
+
+// import Document from "../models/Document.js";
+
+// /* Upload Document */
+
+// export const uploadDocument = async (req, res) => {
+//   try {
+
+//     if (!req.file) {
+//       return res.status(400).json({
+//         message: "No file uploaded",
+//       });
+//     }
+
+//     // file path
+//     const filePath = req.file.path;
+
+//     // read file
+//     const dataBuffer = fs.readFileSync(filePath);
+
+//     // parse pdf
+//     const pdfData = await pdf.default(dataBuffer);
+
+//     // extracted text
+//     const text = pdfData.text || "";
+
+//     // metadata
+//     const metadata = {
+//       title:
+//         text.slice(0, 60) || "Untitled Document",
+
+//       summary:
+//         text.slice(0, 200) || "No summary generated",
+
+//       keywords: [
+//         "PDF",
+//         "Metadata",
+//         "AI",
+//       ],
+
+//       routedTo:
+//         req.user.domain || "general",
+
+//       confidence: "92%",
+//     };
+
+//     // save in mongodb
+//     const document = await Document.create({
+//       user: req.user._id,
+
+//       domain: req.user.domain,
+
+//       fileName: req.file.originalname,
+
+//       extractedText: text,
+
+//       metadata,
+//     });
+
+//     return res.status(201).json({
+//       message:
+//         "Document uploaded successfully",
+
+//       document,
+//     });
+
+//   } catch (error) {
+
+//     console.log("UPLOAD ERROR:");
+//     console.log(error);
+
+//     return res.status(500).json({
+//       message: error.message,
+//     });
+//   }
+// };
+
+// /* Fetch Documents */
+
+// export const getDocuments = async (req, res) => {
+//   try {
+
+//     const documents = await Document.find({
+//       user: req.user._id,
+//     }).sort({ createdAt: -1 });
+
+//     res.json(documents);
+
+//   } catch (error) {
+
+//     res.status(500).json({
+//       message: error.message,
+//     });
+//   }
+// };
 import fs from "fs";
-
-import * as pdfjs from "pdf-parse";
-
+import pdf from "pdf-parse-fixed";
 import Document from "../models/Document.js";
 
 /* Upload Document */
@@ -9,62 +104,69 @@ import Document from "../models/Document.js";
 export const uploadDocument = async (req, res) => {
   try {
 
-    if (!req.file) {
+    if (!req.files || req.files.length === 0) {
       return res.status(400).json({
-        message: "No file uploaded",
+        message: "No files uploaded",
       });
     }
 
-    // file path
-    const filePath = req.file.path;
+    const uploadedDocuments = [];
 
-    // read file
-    const dataBuffer = fs.readFileSync(filePath);
+    for (const file of req.files) {
 
-    // parse pdf
-    const pdfData = await pdf(dataBuffer);
+      // file path
+      const filePath = file.path;
 
-    // extracted text
-    const text = pdfData.text || "";
+      // read file
+      const dataBuffer = fs.readFileSync(filePath);
 
-    // metadata
-    const metadata = {
-      title:
-        text.slice(0, 60) || "Untitled Document",
+      // parse pdf
+      const pdfData = await pdf(dataBuffer);
 
-      summary:
-        text.slice(0, 200) || "No summary generated",
+      // extracted text
+      const text = pdfData.text || "";
 
-      keywords: [
-        "PDF",
-        "Metadata",
-        "AI",
-      ],
+      // metadata
+      const metadata = {
+        title:
+          text.slice(0, 60) || "Untitled Document",
 
-      routedTo:
-        req.user.domain || "general",
+        summary:
+          text.slice(0, 200) || "No summary generated",
 
-      confidence: "92%",
-    };
+        keywords: [
+          "PDF",
+          "Metadata",
+          "AI",
+        ],
 
-    // save in mongodb
-    const document = await Document.create({
-      user: req.user._id,
+        routedTo:
+          req.user.domain || "general",
 
-      domain: req.user.domain,
+        confidence: "92%",
+      };
 
-      fileName: req.file.originalname,
+      // save in mongodb
+      const document = await Document.create({
+        user: req.user._id,
 
-      extractedText: text,
+        domain: req.user.domain,
 
-      metadata,
-    });
+        fileName: file.originalname,
+
+        extractedText: text,
+
+        metadata,
+      });
+
+      uploadedDocuments.push(document);
+    }
 
     return res.status(201).json({
       message:
-        "Document uploaded successfully",
+        "Documents uploaded successfully",
 
-      document,
+      documents: uploadedDocuments,
     });
 
   } catch (error) {
@@ -77,7 +179,6 @@ export const uploadDocument = async (req, res) => {
     });
   }
 };
-
 /* Fetch Documents */
 
 export const getDocuments = async (req, res) => {
