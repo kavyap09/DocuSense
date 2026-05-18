@@ -1,100 +1,3 @@
-// import fs from "fs";
-// import * as pdfjs from "pdf-parse";
-
-// import Document from "../models/Document.js";
-
-// /* Upload Document */
-
-// export const uploadDocument = async (req, res) => {
-//   try {
-
-//     if (!req.file) {
-//       return res.status(400).json({
-//         message: "No file uploaded",
-//       });
-//     }
-
-//     // file path
-//     const filePath = req.file.path;
-
-//     // read file
-//     const dataBuffer = fs.readFileSync(filePath);
-
-//     // parse pdf
-//     const pdfData = await pdf.default(dataBuffer);
-
-//     // extracted text
-//     const text = pdfData.text || "";
-
-//     // metadata
-//     const metadata = {
-//       title:
-//         text.slice(0, 60) || "Untitled Document",
-
-//       summary:
-//         text.slice(0, 200) || "No summary generated",
-
-//       keywords: [
-//         "PDF",
-//         "Metadata",
-//         "AI",
-//       ],
-
-//       routedTo:
-//         req.user.domain || "general",
-
-//       confidence: "92%",
-//     };
-
-//     // save in mongodb
-//     const document = await Document.create({
-//       user: req.user._id,
-
-//       domain: req.user.domain,
-
-//       fileName: req.file.originalname,
-
-//       extractedText: text,
-
-//       metadata,
-//     });
-
-//     return res.status(201).json({
-//       message:
-//         "Document uploaded successfully",
-
-//       document,
-//     });
-
-//   } catch (error) {
-
-//     console.log("UPLOAD ERROR:");
-//     console.log(error);
-
-//     return res.status(500).json({
-//       message: error.message,
-//     });
-//   }
-// };
-
-// /* Fetch Documents */
-
-// export const getDocuments = async (req, res) => {
-//   try {
-
-//     const documents = await Document.find({
-//       user: req.user._id,
-//     }).sort({ createdAt: -1 });
-
-//     res.json(documents);
-
-//   } catch (error) {
-
-//     res.status(500).json({
-//       message: error.message,
-//     });
-//   }
-// };
 import fs from "fs";
 import pdf from "pdf-parse-fixed";
 import Document from "../models/Document.js";
@@ -104,69 +7,62 @@ import Document from "../models/Document.js";
 export const uploadDocument = async (req, res) => {
   try {
 
-    if (!req.files || req.files.length === 0) {
+    if (!req.file) {
       return res.status(400).json({
-        message: "No files uploaded",
+        message: "No file uploaded",
       });
     }
 
-    const uploadedDocuments = [];
+    // file path
+    const filePath = req.file.path;
 
-    for (const file of req.files) {
+    // read file
+    const dataBuffer = fs.readFileSync(filePath);
 
-      // file path
-      const filePath = file.path;
+    // parse pdf
+    const pdfData = await pdf(dataBuffer);
 
-      // read file
-      const dataBuffer = fs.readFileSync(filePath);
+    // extracted text
+    const text = pdfData.text || "";
 
-      // parse pdf
-      const pdfData = await pdf(dataBuffer);
+    // metadata
+    const metadata = {
+      title:
+        text.slice(0, 60) || "Untitled Document",
 
-      // extracted text
-      const text = pdfData.text || "";
+      summary:
+        text.slice(0, 200) || "No summary generated",
 
-      // metadata
-      const metadata = {
-        title:
-          text.slice(0, 60) || "Untitled Document",
+      keywords: [
+        "PDF",
+        "Metadata",
+        "AI",
+      ],
 
-        summary:
-          text.slice(0, 200) || "No summary generated",
+      routedTo:
+        req.user.domain || "general",
 
-        keywords: [
-          "PDF",
-          "Metadata",
-          "AI",
-        ],
+      confidence: "92%",
+    };
 
-        routedTo:
-          req.user.domain || "general",
+    // save in mongodb
+    const document = await Document.create({
+      user: req.user._id,
 
-        confidence: "92%",
-      };
+      domain: req.user.domain,
 
-      // save in mongodb
-      const document = await Document.create({
-        user: req.user._id,
+      fileName: req.file.originalname,
 
-        domain: req.user.domain,
+      extractedText: text,
 
-        fileName: file.originalname,
-
-        extractedText: text,
-
-        metadata,
-      });
-
-      uploadedDocuments.push(document);
-    }
+      metadata,
+    });
 
     return res.status(201).json({
       message:
-        "Documents uploaded successfully",
+        "Document uploaded successfully",
 
-      documents: uploadedDocuments,
+      document,
     });
 
   } catch (error) {
@@ -179,6 +75,7 @@ export const uploadDocument = async (req, res) => {
     });
   }
 };
+
 /* Fetch Documents */
 
 export const getDocuments = async (req, res) => {
@@ -197,3 +94,105 @@ export const getDocuments = async (req, res) => {
     });
   }
 };
+// import fs from "fs";
+// import pdf from "pdf-parse-fixed";
+// import Document from "../models/Document.js";
+
+// /* Upload Document */
+
+// export const uploadDocument = async (req, res) => {
+//   try {
+
+//     if (!req.files || req.files.length === 0) {
+//       return res.status(400).json({
+//         message: "No files uploaded",
+//       });
+//     }
+
+//     const uploadedDocuments = [];
+
+//     for (const file of req.files) {
+
+//       // file path
+//       const filePath = file.path;
+
+//       // read file
+//       const dataBuffer = fs.readFileSync(filePath);
+
+//       // parse pdf
+//       const pdfData = await pdf(dataBuffer);
+
+//       // extracted text
+//       const text = pdfData.text || "";
+
+//       // metadata
+//       const metadata = {
+//         title:
+//           text.slice(0, 60) || "Untitled Document",
+
+//         summary:
+//           text.slice(0, 200) || "No summary generated",
+
+//         keywords: [
+//           "PDF",
+//           "Metadata",
+//           "AI",
+//         ],
+
+//         routedTo:
+//           req.user.domain || "general",
+
+//         confidence: "92%",
+//       };
+
+//       // save in mongodb
+//       const document = await Document.create({
+//         user: req.user._id,
+
+//         domain: req.user.domain,
+
+//         fileName: file.originalname,
+
+//         extractedText: text,
+
+//         metadata,
+//       });
+
+//       uploadedDocuments.push(document);
+//     }
+
+//     return res.status(201).json({
+//       message:
+//         "Documents uploaded successfully",
+
+//       documents: uploadedDocuments,
+//     });
+
+//   } catch (error) {
+
+//     console.log("UPLOAD ERROR:");
+//     console.log(error);
+
+//     return res.status(500).json({
+//       message: error.message,
+//     });
+//   }
+// };
+// /* Fetch Documents */
+
+// export const getDocuments = async (req, res) => {
+//   try {
+
+//     const documents = await Document.find({
+//       user: req.user._id,
+//     }).sort({ createdAt: -1 });
+
+//     res.json(documents);
+
+//   } catch (error) {
+
+//     res.status(500).json({
+//       message: error.message,
+//     });
+//   }
+// };

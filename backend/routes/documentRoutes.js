@@ -33,7 +33,7 @@ const upload = multer({ storage });
 router.post(
   "/upload",
   protect,
-  upload.array("files", 50),
+  upload.single("file"),
   uploadDocument
 );
 
